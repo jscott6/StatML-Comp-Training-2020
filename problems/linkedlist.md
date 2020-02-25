@@ -22,7 +22,7 @@ The task is to create a C++ implementation of a singly linked list. Each element
     - `LinkedList()`: a constructor initialising the head pointer to `NULL`
     - `head()`: returns the `double` value stores inside the head node.
     - `size()`: gives the total number of nodes in the list
-    - `insert()`: takes a double and creates a new node, setting it as the head node
+    - `insert()`: takes a double and creates a new node on the heap, setting it as the head node
     - `remove()`: remove the head node from the list (remember to free memory on the heap!)
     - `print()`: a simple method to print the values in the list to the R console. `Rcpp::Rcout` may come in handy.
 
@@ -30,5 +30,12 @@ The task is to create a C++ implementation of a singly linked list. Each element
 
 4. Load into an R environment using `Rcpp::sourceCpp()` and verify basic functionality.
 
-5. **(Advanced) S4 dispatch:** todo.   
+5. **(Advanced) S4 Method Dispatch:** Ideally `new()` should not be used directly be users of our class. Also accessing methods using `obj$method()` is not particularly R-like. It is more idiomatic to use generic functions for method dispatch. In this problem, you will write R code to achieve this. Please see Hadley Wickham's [page](https://adv-r.hadley.nz/s4.html) on S4 dispatch for information which will be helpful for the following tasks. 
+
+    - Write a helper R function `LinkedList()` to construct and return an object of type `"Rcpp_LinkedList"`.
+    - Create generic functions `size()`, `head()`, `insert()` and `remove()` using `methods::setGeneric()` function. 
+    - Write corresponding methods for for these functions for the class `"Rcpp_LinkedList"` (use `methods::setMethod()` for this). Also write a method for the (already exisitng) generic function `show()`. This should 
+    internally use `obj$print()` and will control how an object of type `"Rcpp_LinkedList"` prints in R.
+    - Verify functionality of the helper constructor and the generic functions.
+
 
