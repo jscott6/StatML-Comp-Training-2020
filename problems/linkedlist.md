@@ -35,7 +35,7 @@ The task is to create a C++ implementation of a singly linked list. Each element
     - Write a helper R function `LinkedList()` to construct and return an object of type `"Rcpp_LinkedList"`.
     - Create generic functions `size()`, `head()`, `insert()` and `remove()` using `methods::setGeneric()` function. 
     - Write corresponding methods for for these functions for the class `"Rcpp_LinkedList"` (use `methods::setMethod()` for this). Also write a method for the (already exisitng) generic function `show()`. This should 
-    internally use `obj$print()` and will control how an object of type `"Rcpp_LinkedList"` prints in R.
+    internally use `obj$print()` and will control how an object of type `"Rcpp_LinkedList"` prints to the R console.
     - Verify functionality of the helper constructor and the generic functions.
 
 
