@@ -13,7 +13,7 @@ Linked lists are not suited to every task. Direct and random access is not possi
 
 ## Problem
 
-The task is to create a C++ implementation of a singly linked list. Each element of the list will store a value of type `double`. You will then use an Rcpp Module to expose the class to R. In case you become stuck, an example solution will be posted [here](../solutions/linkedlist.md) at some point during the course. However I strongly recommend you make as much progress as you can before looking at these!
+The task is to create a C++ implementation of a singly linked list. Each element of the list will store a value of type `double`. You will then use an Rcpp Module to expose the class to R. In case you become stuck, an example solution will be posted [here](../solutions/linkedlist/linkedlist.md) at some point during the course. However I strongly recommend you make as much progress as you can before looking at these!
 
 1. Define a `Node` class with two attributes, one of type `double` and one pointer to another node (type `Node*`).
 
@@ -30,5 +30,5 @@ The task is to create a C++ implementation of a singly linked list. Each element
 
 4. Load into an R environment using `Rcpp::sourceCpp()` and verify basic functionality.
 
-5. **(Advanced) S4 dispatch:** todo.
+5. **(Advanced) S4 dispatch:** todo.   
 
