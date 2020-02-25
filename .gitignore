@@ -1,2 +1,4 @@
 .DS_Store
 *.rmd
+notes/figs/
+notes/top_matter/
