@@ -1,10 +1,6 @@
 
-fibR <- function(n) {
+fibRec <- function(n) {
   if (n < 3) n
-  else fibR(n-1) + fibR(n-2)
+  else fibRec(n-1) + fibRec(n-2)
 }
-
-
-
-
 

@@ -1,8 +1,16 @@
 #include <Rcpp.h>
+#include <vector>
 using namespace Rcpp;
 
+// [[Rcpp::plugins(cpp11)]]
+
 // [[Rcpp::export]]
-NumericVector timesTwo(NumericVector x) {
-  return x * 2;
+std::vector<double> timesTwo(std::vector<double> x) {
+  
+  for(auto &a: x)
+    a *= 2;
+  
+  return x;
 }
+
 
