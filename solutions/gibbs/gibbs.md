@@ -1,1 +1,0 @@
-An example solution is provided by Hadley Wickham, and is available [here](http://adv-r.had.co.nz/Rcpp.html#rcpp-case-studies). 
