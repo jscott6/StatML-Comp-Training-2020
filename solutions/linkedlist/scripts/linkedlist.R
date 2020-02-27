@@ -1,7 +1,4 @@
-library(Rcpp)
-
-sourceCpp("linkedlist.cpp")
-
+Rcpp::sourceCpp("solutions/linkedlist/scripts/linkedlist.cpp")
 
 # Verify functionality
 x <- new(LinkedList)
@@ -11,6 +8,7 @@ x$head()
 x$size()
 x$print()
 x$remove()
+x$print()
 
 # Lets use S4 dispatch for this 
 
@@ -40,7 +38,7 @@ setMethod(
   "remove", 
   "Rcpp_LinkedList", 
   function(obj) {
-    if(!size(obj)) 
+    if(size(obj)) 
     obj$remove()
   }
 )
@@ -51,4 +49,5 @@ insert(y, 1.0)
 print(y)
 remove(y)
 print(y)
+# no memory leak
 remove(y)
