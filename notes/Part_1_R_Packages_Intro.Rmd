@@ -1,0 +1,572 @@
+---
+title: 'Fast and Reusable R code : Developing R packages and Rcpp'
+author: "C. C. Gill and J. Scott"
+date: "27/02/2020"
+output:
+  slidy_presentation: default
+  ioslides_presentation: default
+  beamer_presentation: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+```
+
+<!-- Temporarily the html rendered version of this document is available at
+https://www.stats.ox.ac.uk/~gill/Part_1_R_Packages_Intro.html -->
+
+## Learning Objectives
+
+We've been asked to introduce you to topics we have found useful.  
+Since we have both written several R packages and used Rcpp quite
+extensively we have chosen these two topics.  
+
+The key things we'd like you to take away from today are the following:
+
+1. Understand basic R syntax and data structures
+2. Be able to build your own R package
+3. Be able to incorporate c++ code into an R workflow
+4. Have clear directions for further reading/learning in this area
+
+##  Content for today
+
+1. Reminder of or introduction to R syntax and base R data structures
+2. Building R packages
+3. Practical - build your own R package
+4. Rcpp - extending R with compiled c++ code via Rcpp
+5. Practical
+
+It will be a very practical session.
+
+## Intro to R
+
+R is a language and environment for statistical computing and graphics.  You can
+check https://www.r-project.org for an introduction and to download it.  One of 
+the first lines on the website is as follows:
+
+> R is a free software environment for statistical computing and graphics. It compiles
+and runs on a wide variety of UNIX platforms, Windows and MacOS. To download R, please
+choose your preferred CRAN mirror.
+
+what is CRAN? : R comes with a base installation with basic data types, structures,
+functions etc. and is extended with packages.  Many of these are available from CRAN,
+the _comprehensive R archive network_ , a series of servers available worldwide with
+identical copies of the CRAN packages available for download.
+
+Quite recently R packages have been released which make it easy to develop your own 
+packages, making your own packages reusable, make data analyses more reproducible, etc.
+As a result, packages (or development versions of packages) are now often available
+from (for example) GitHub, but there is no guarantee these will be maintained.
+
+Bioconductor is another source of well supported, maintained packages for R, focused on bioinformatics.
+
+## Using R
+
+R is an open source programming language and environment that is dynamically typed, used both in interactive sessions or scripting.  It does not require compilation but can make use of compiled code.
+
+R is accessible from the command line, simply type 'R' and you'll enter an interactive R session.
+
+```{r,echo = T}
+  x <- 1        # assignment is with  the left arrow <- , or equals
+  x
+  y = "string"  # assignment can also use =
+  y
+  str(x) # str allows you to check the class and contents of an object
+
+```
+
+## Objects in R
+
+- Almost all base R objects are vectors (Figure from R for Data Science, Hadley Wickham)
+
+![](data_structures_overview.png){ width=40% }
+
+
+
+- In general R programming it is not necessary to distinguish between integers 
+and doubles, as they are both stored in numeric vectors, however, when we use c++
+through Rcpp it is useful to be aware of these...
+
+## Objects in R - examples:
+Vectors can only contain one atomic data type
+```{r,echo = T}
+ x <- c(0,4,6,10) # this is a vector with 4 entries
+ print(x)
+str(x)
+```
+```{r,echo = T}
+y = 1:10
+str(y)
+z <- c(x,y) # concatenate x and y
+str(z)
+```
+
+
+##
+
+```{r,echo = T}
+y <- rnorm(500) # vector of 500 draws from standard Normal RV
+str(y)
+
+length(y) # length is defined on lists and vectors
+```
+
+ - `TRUE` and `FALSE` are logical constants,
+ - `NULL` is the null element,
+ - `NA` is for missing data, 
+ - `NaN` is Not a Number.
+ - Note that R is case-sensitive, `TRUE` and `True` are not the same.
+
+##
+
+```{r,echo = T}
+vec <- rnorm(8)
+print(vec)
+A <- matrix(vec,2,4) ## matrix with 2 rows and 4 columns with entries from y
+print(A) # notice the matrix is populated column by column..
+A[1,2] # accessing matrix entries, notice indexing begins at 1.
+vec[5] # accessing vector entries
+```
+
+
+
+## Lists
+Lists are indexed either numerically or by names,
+```{r,echo = T}
+  L <- list(numbers = c(1:5,0.5*c(1:5)),
+          strings = c('This','is','a','list'))
+  L # L is a list containing different data types
+  
+  L$strings # this is how you access entries of L
+  L[[1]] # or this
+
+```
+## Data Frames
+data frames are another important data structure, they are the fundamental data structure in R's modeling software:
+```{r, echo =T}
+head(iris)   # an iris dataset preloaded with R demonstrates a data frame
+dim(iris)    
+class(iris)
+```
+
+##
+
+```{r,echo = T}
+summary(iris) 
+
+```
+
+
+## R functions
+
+Let's consider the essential Hello World in R:
+
+```{r, echo = T}
+# a simple function
+helloworld <- function(){
+  print('Hello World') # notice we can use single quotes or double for strings.
+  return(0)
+}
+
+helloworld()
+```
+## Running R scripts from files
+
+Place the above code in a file `hello.R` in the current working directory, and
+running the following code in a bash terminal
+
+```{bash, echo = F}
+echo 'helloworld <- function() {print("Hello World")}' > hello.R
+echo 'helloworld()' >> hello.R
+```
+```{bash,echo=T}
+Rscript hello.R   # bash command to run an R script
+```
+In an R session we can run the following:
+```{r,echo = T}
+rm(list = ls())   # clears current environment of all variables
+source('hello.R') # run an R file with R code in it from R session
+```
+
+## Scope - be careful
+  
+  If a function refers to a variable that is explicitly passed in as a function
+  parameter but is defined in the environment, the function will use it, it will
+  not throw an error.
+  
+```{r, echo = T}
+  a <- 5
+  add_a <- function(b = 3){ # the default value for parameter b is 3.
+  return(a+b)
+  }
+  add_a()
+  add_a(10.5)
+```
+It can read but cannot (usually) edit variables outside the scope of the function.
+
+##
+
+```{r,echo =T}
+a <- 5
+add_a <- function(b=3){
+  a<-3
+  print(paste('In the function, a =',a))
+  return(a+b)
+}
+add_a()
+print(paste('Outside the function, a =',a))
+```
+
+## R packages:
+
+Now we know how to create functions, we will probably want to reuse our code.  The
+basic unit of code to be reused is .r scripts, but more useful for sharing, maintaining,
+or organising your code is packages:
+
+The, in some sense, 'official' collection of packages that are put through quite
+stringent tests and are maintained is on CRAN.  These are available to install 
+directly from within  R.  For example,
+
+```
+install.packages('ggplot2') # installs package ggplot2
+```
+```{r,echo = T}
+
+## Loading library ggplot2:
+library(ggplot2)            # load ggplot2 library into environment
+
+# for shared code: check if package is installed and if so loads it, if not then install it, then load it.
+if(!require('scales')){     # checks if scales is available, loads if possible
+install.packages("scales")
+library(scales)             # installs scales from CRAN, you may be asked to choose a mirror.
+}
+```
+Another reason to create an R package:
+
+R packages are a great way to organise any data analysis you're carrying out.  It is essential
+that research is reproducible and one way to achieve this is to organise your analyses into using R packages.
+
+
+## Packages on GitHub:
+
+More recently many packages have been maintained on github, and can be installed using a package called devtools (provides wrappers to some base R and bash commands)
+```
+
+if(!require('devtools')){install.packages('devtools')}
+
+if(!require("PackageName")){devtools::install_github("DeveloperName/PackageName"))}
+
+```
+This is an example of calling a function `install_github` from the namespace in package devtools via the `::` syntax.
+
+## Creating your own package
+
+To create a first R package, a useful place to start is Hilary Parker's very clear introduction: 
+https://hilaryparker.com/2014/04/29/writing-an-r-package-from-scratch/
+
+I also found it extremely useful to read Hadley Wickham's R packages book: 
+http://r-pkgs.had.co.nz
+
+and other resources including Karl Broman's R Package Primer: https://kbroman.org/pkg_primer/
+
+We will aim to cover the bare essentials to create a package but suggest reading all three of these at some later date to get a solid grounding of what is possible and what you're doing.
+
+Eventually it is worth exploring the `Writing R Extensions` manual to better understand the topic. 
+
+
+***
+
+## Pick a package name
+So... before you start anything else **Pick a name** for your package.
+
+Two important points (both of which have caught me out recently)
+
+1. Package names must only include letters, numbers and periods, must start with a letter and must not end with a period.
+2. Search for packages with the same name, it always seems unlikely that someone else would have used it, but it happens - remember that some packages you use will install their dependencies.  For example, 'forcats' is a package which is a part of the very popular 'tidyverse' group of packages. 
+
+Some points also worth noting: 
+- avoid using both upper and lower case letters (its harder to remember and harder to type)
+- use names that evoke the use or problem, with a modification to be unique
+- pick a name that is easy to search on any suitable search engine.
+
+## Package structure:
+
+There are three required parts for an R package:
+
+1. A DESCRIPTION file (stores metadata for the package)
+2. An R directory  (stores the R source code for the package)
+3. A NAMESPACE file (stores namespace for the package, we'll cover this later)
+
+#### Other common package components:
+4. Man directory (which will store the .Rd files that encode the help files you see when you use ?functionname in R)
+5. vignettes directory (tutorials, also available for building using devtools)
+6. tests directory (for example unit testing via the testthat package)
+7. src directory (compiled code, for example c++ code as we'll cover later)
+
+
+## Creating a package:
+
+```{r,echo=T}
+parentdirectory <- '~/StatML_CDT_packages/'
+packagename <- 'my.first.package'
+
+if(!dir.exists(parentdirectory)){dir.create(parentdirectory)}
+
+setwd(parentdirectory) # set working directory to the parentdirectory
+
+devtools::create(packagename) # create a basic package with this name
+```
+
+This creates a basic package with an R directory, a DESCRIPTION file, and a NAMESPACE file.
+
+## Including functions in your package
+
+Continuing from the my.first.package example, we can add the following lines to a .R file in the R directory.
+
+```
+my_first_package_function <- function(myname = NULL){
+  if(is.null(name)){
+    stop(" ERROR: please provide a name as the first parameter value ")
+  }else{
+    print("This function call is from  my.first.package")
+    print(paste("Function called by",name))
+  }
+  return(0)
+} 
+```
+
+We can then call devtools::build(), to create a tarball that we could load,
+or devtools::install(), to install the package on your current system.
+
+We can then call the function from our package by
+
+```
+my.first.package::my_first_package_function(myname = 'Chris')
+# or 
+library(my.first.package)
+my_first_package_function(myname = 'Chris')
+```
+
+## Namespaces
+
+Namespaces allow you to export functions or objects to be available outside of your package.
+
+Once a package is installed, the functions available in that package can be called via 
+
+```
+packagename::functionname() 
+# or by 
+library(packagename)
+functionname()
+```
+
+The two primary reasons for using namespaces is to control imports and exports, that is to use the function from a particular package, and avoiding conflicts by controlling which functions from your package are available outside the package to the R session. 
+
+The NAMESPACE file is for this purpose, and can be maintained by roxygen2 via the devtools::document() function.
+
+## Some good NAMESPACE advice:
+
+Hadley Wickham's suggestion: 
+
+> 'I believe that packages that have a wide audience should strive to do one thing and do it well. All       functions in a package should be related to a single problem (or a set of closely related               problems). Any functions not related to that purpose should not be exported. For example, most of        my packages have a utils.R file that contains many small functions that are useful for me, but          aren’t part of the core purpose of those packages. I never export these functions.'
+
+## The NAMESPACE file
+
+Take a look at the NAMESPACE file created by devtools::create - it currently exports everything from the package.
+
+```
+# Generated by roxygen2: fake comment so roxygen2 overwrites silently.
+exportPattern("^[^\\.]")
+```
+
+To export a function into the namespace, change the .R file to include `#' @export` roxygen comment:
+```
+#' @export
+my_first_package_function <- function(myname = NULL){
+  if(is.null(name)){
+    stop(" ERROR: please provide a name as the first parameter value ")
+  }else{
+    print("This function call is from  my.first.package")
+    print(paste("Function called by",name))
+  }
+  return(0)
+} 
+```
+
+Now run `devtools::document()` and roxygen2 will add this function to your NAMESPACE file and your namespace.  
+
+It will look something like this:
+```
+# Generated by roxygen2: do not edit by hand
+
+export(my_first_package_function)
+```
+
+## Package function Documentation
+Try the following in Rstudio console or an R console in a terminal:
+```
+?sum
+```
+In Rstudio you will most likely see the 'sum' function help file appear nicely formatted in the Help window, and in the terminal you'll see the same description appear in the terminal window.
+
+Similar documentation for our files is stored in a .Rd file.
+
+We can also generate these files automatically using the roxygen2 package or the `devtools::document()` function.  
+
+## Example function documentation
+
+```
+#' Multiply two matrices
+#'
+#' @param A a matrix.
+#' @param B a matrix.
+#' @return The product of \code{A} and \code{B}.
+#' @examples
+#' X <- matrix(1:6,2,3)
+#' Y <- matrix(1:15,3,5)
+#' multiply(X, Y)
+#' @export
+multiply <- function(A, B) {
+
+  if(ncol(A) != nrow(B)){stop('matrices A and B have incompatible dimensions')}
+  A %*% B
+}
+```
+
+Adding this to a .R file in your package and calling `devtools::document()` will create a `man` directory containing a `.Rd` file documenting the function multiply.  Installing this package and typing help(my.first.package::multiply), or ?my.first.package::multiply will display the resulting documentation.
+
+```{R, echo = T}
+?my.first.package::multiply
+```
+
+## The .Rd file created:
+
+```
+% Generated by roxygen2: do not edit by hand
+% Please edit documentation in R/first_function.R
+\name{multiply}
+\alias{multiply}
+\title{Multiply two matrices}
+\usage{
+multiply(A, B)
+}
+\arguments{
+\item{A}{a matrix.}
+
+\item{B}{a matrix.}
+}
+\value{
+The product of \code{A} and \code{B}.
+}
+\description{
+Multiply two matrices
+}
+\examples{
+X <- matrix(1:6,2,3)
+Y <- matrix(1:15,3,5)
+multiply(X, Y)
+}
+```
+
+## DESCRIPTION file
+The initial template DESCRIPTION file generated by devtools looks something like this:
+```
+Package: my.first.package
+Title: What the Package Does (One Line, Title Case)
+Version: 0.0.0.9000
+Authors@R: 
+    person(given = "First",
+           family = "Last",
+           role = c("aut", "cre"),
+           email = "first.last@example.com",
+           comment = c(ORCID = "YOUR-ORCID-ID"))
+Description: What the package does (one paragraph).
+License: What license it uses
+Encoding: UTF-8
+LazyData: true
+RoxygenNote: 7.0.2
+```
+## The DESCRIPTION file parts
+
+- Title: One line description of package, title case, must not end in a period.
+- Version: self-explanatory
+- Description: what the package does, one paragraph, <80 characters per line, subsequent lines indented with 4 spaces, ends in a period.
+- Imports: comma-separated list of packages required for your package to work. These will be installed with your package, and you can refer to functions from imported packages using the :: syntax. (see also namespace imports)
+
+```
+Imports:
+    ggvis (>= 0.2),
+    dplyr (>= 0.3.0.1)
+Suggests:
+    MASS (>= 7.3.0)
+
+```
+
+- Depends: e.g. depend on a specific version of R - ` Depends: R (>= 3.0.1)` , 
+- Suggests: comma-separated list of packages your package can use but which are not required for your package to work.
+- Enhances: packages enhanced by your package, for instance if you define methods for classes from another package.
+
+Note that you should specify the version of the package needed (even if that's just the latest version you've tested it with).
+
+## Other topics worth your time:
+
+- unit testing (with the `testthat` package)
+- submission to CRAN
+- maintaining on github (the rstudio interface is very user friendly)
+- versioning your package
+- Using compiled source code in your package via Rcpp
+- Creating tutorial vignettes
+- Converting a .Rmd Rmarkdown document into a github-friendly Readme.md file
+- Using more Rcpp libraries such as RcppEigen, RcppArmadillo, and RcppGSL which provide interfaces for powerful c++ libraries.
+    * There are good tutorials and documentation available for all of these.
+- exporting c++ data structures and objects to R
+- object oriented programming in R (S3 and S4 objects)
+- roxygen templating for documentation
+
+## Further reading:
+Here are some example packages for good examples that can be viewed on github:
+
+- RcppNumerical
+    * An Rcpp wrapper package to powerful c++ optimization libraries
+- ggplot2 
+    * Hadley Wickham's R package for graphics based on the grammar of graphics
+
+
+
+
+
+## Short Exercises
+
+1. Simple package exercise: create a simple package with a function of your choice, and experiment with functions having and not having documentation in roxygen.  Experiment with namespace exports, and view your documentation in the R console or in Rstudio.
+
+2. Create a package including a Gibbs Sampler using the code in the GitHub repo for this lecture.  Document the functions you want to export.  Test your functions in the R console by attaching the package with a `library` call.
+
+3. (A convenient Git interface in Rstudio) In either of the above packages, initialise the package as a git repo of your own and view the package in Rstudio (use `setwd("path/to/package/")` to set the working directory).  Edit your function files and use the Rstudio Git window to do a commit.  
+
+##
+
+4. In preparation for the later exercises and examples, experiment with the microbenchmark package: Write some simple code and compare the execution times, here are some code chunks you might want to compare: 
+  If you have time, for each one, write a function wrapping the procedure taking a vector as input and returning a logical vector.  Place these functions in a package, attach the package,  and compare execution times of the functions. If you're new to R, ensure you understand the syntax, in particular the call to sapply.
+  
+```
+vec<-rnorm(5e4)
+# generate a logical vector with values indicating whether the corresponding value of vec is >0.
+#trial one:
+outputvec1 = logical()
+for(i in 1:length(vec)){
+  outputvec1 = c(outputvec1,vec[i]>0)
+}
+
+#trial two: # preallocate memory
+outputvec2 = rep(TRUE,length(vec))
+for(i in 1:length(vec)){
+  outputvec2[i] = vec[i]>0
+}
+
+# trial three
+outputvec3<-sapply(vec,function(x){x>0})
+
+#trial four           
+outputvec4 <- (vec>0)
+
+```
