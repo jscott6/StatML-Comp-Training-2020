@@ -12,9 +12,14 @@ output:
 knitr::opts_chunk$set(echo = FALSE)
 ```
 
+<!-- Temporarily the html rendered version of this document is available at
+https://www.stats.ox.ac.uk/~gill/Part_1_R_Packages_Intro.html -->
+
 ## Learning Objectives
 
-We've been asked to introduce you to topics we have found useful.  Since we have both written several R packages and used Rcpp quite extensively we have chosen these two topics.  
+We've been asked to introduce you to topics we have found useful.  
+Since we have both written several R packages and used Rcpp quite
+extensively we have chosen these two topics.  
 
 The key things we'd like you to take away from today are the following:
 
@@ -35,13 +40,23 @@ It will be a very practical session.
 
 ## Intro to R
 
-R is a language and environment for statistical computing and graphics.  You can check https://www.r-project.org for an introduction and to download it.  One of the first lines on the website is as follows:
+R is a language and environment for statistical computing and graphics.  You can
+check https://www.r-project.org for an introduction and to download it.  One of 
+the first lines on the website is as follows:
 
-> R is a free software environment for statistical computing and graphics. It compiles and runs on a wide variety of UNIX platforms, Windows and MacOS. To download R, please choose your preferred CRAN mirror.
+> R is a free software environment for statistical computing and graphics. It compiles
+and runs on a wide variety of UNIX platforms, Windows and MacOS. To download R, please
+choose your preferred CRAN mirror.
 
-what is CRAN? : R comes with a base installation with basic data types, structures, functions etc. and is extended with packages.  Many of these are available from CRAN, the _comprehensive R archive network_ , a series of servers available worldwide with identical copies of the CRAN packages available for download.
+what is CRAN? : R comes with a base installation with basic data types, structures,
+functions etc. and is extended with packages.  Many of these are available from CRAN,
+the _comprehensive R archive network_ , a series of servers available worldwide with
+identical copies of the CRAN packages available for download.
 
-Quite recently R packages have been released which make it easy to develop your own packages, making your own packages reusable, make data analyses more reproducible, etc.  As a result, packages (or development versions of packages) are now often available from (for example) GitHub, but there is no guarantee these will be maintained.
+Quite recently R packages have been released which make it easy to develop your own 
+packages, making your own packages reusable, make data analyses more reproducible, etc.
+As a result, packages (or development versions of packages) are now often available
+from (for example) GitHub, but there is no guarantee these will be maintained.
 
 Bioconductor is another source of well supported, maintained packages for R, focused on bioinformatics.
 
@@ -68,7 +83,9 @@ R is accessible from the command line, simply type 'R' and you'll enter an inter
 
 
 
-- In general R programming it is not necessary to distinguish between integers and doubles, as they are both stored in numeric vectors, however, when we use c++ through Rcpp it is useful to be aware of these...
+- In general R programming it is not necessary to distinguish between integers 
+and doubles, as they are both stored in numeric vectors, however, when we use c++
+through Rcpp it is useful to be aware of these...
 
 ## Objects in R - examples:
 Vectors can only contain one atomic data type
@@ -155,7 +172,8 @@ helloworld()
 ```
 ## Running R scripts from files
 
-Place the above code in a file `hello.R` in the current working directory, and running the following code in a bash terminal
+Place the above code in a file `hello.R` in the current working directory, and
+running the following code in a bash terminal
 
 ```{bash, echo = F}
 echo 'helloworld <- function() {print("Hello World")}' > hello.R
@@ -172,7 +190,9 @@ source('hello.R') # run an R file with R code in it from R session
 
 ## Scope - be careful
   
-  If a function refers to a variable that is explicitly passed in as a function parameter but is defined in the environment, the function will use it, it will not throw an error.
+  If a function refers to a variable that is explicitly passed in as a function
+  parameter but is defined in the environment, the function will use it, it will
+  not throw an error.
   
 ```{r, echo = T}
   a <- 5
@@ -199,9 +219,13 @@ print(paste('Outside the function, a =',a))
 
 ## R packages:
 
-Now we know how to create functions, we will probably want to reuse our code.  The basic unit of code to be reused is .r scripts, but more useful for sharing, maintaining, or organising your code is packages:
+Now we know how to create functions, we will probably want to reuse our code.  The
+basic unit of code to be reused is .r scripts, but more useful for sharing, maintaining,
+or organising your code is packages:
 
-The, in some sense, 'official' collection of packages that are put through quite stringent tests and are maintained is on CRAN.  These are available to install directly from within  R.  For example,
+The, in some sense, 'official' collection of packages that are put through quite
+stringent tests and are maintained is on CRAN.  These are available to install 
+directly from within  R.  For example,
 
 ```
 install.packages('ggplot2') # installs package ggplot2
@@ -219,7 +243,8 @@ library(scales)             # installs scales from CRAN, you may be asked to cho
 ```
 Another reason to create an R package:
 
-R packages are a great way to organise any data analysis you're carrying out.  It is essential that research is reproducible and one way to achieve this is to organise your analyses into using R packages.
+R packages are a great way to organise any data analysis you're carrying out.  It is essential
+that research is reproducible and one way to achieve this is to organise your analyses into using R packages.
 
 
 ## Packages on GitHub:
@@ -334,8 +359,6 @@ packagename::functionname()
 library(packagename)
 functionname()
 ```
-
-<!-- When building your package, you can assume all R functions are available and visible to all other R functions, however, you may not want all your behind-the-scenes R functions to be made public. -->
 
 The two primary reasons for using namespaces is to control imports and exports, that is to use the function from a particular package, and avoiding conflicts by controlling which functions from your package are available outside the package to the R session. 
 
